@@ -1,7 +1,8 @@
 ﻿namespace FlightsAPI.Models.Amadeus
 {
-    public record AmadeusResponse(
-        Warning[] Warnings,
-        FlightOffer[] Data
-    );
+    public record AmadeusResponse
+    {
+        public Warning[]? Warnings { get; init; }
+        public AmadeusFlightOffer[]? Data { get; init; }
+    }
 }
