@@ -1,39 +1,58 @@
 ﻿namespace FlightsAPI.Models.Amadeus
 {
-    public record AmadeusFlightOfferQuery(
-        string CurrencyCode,
-        OriginDestination[] OriginDestinations,
-        ExtendedTravelInfo[] Travelers,
-        SearchCriteria SearchCriteria
-    )
-    {
-        public string[] Sources { get; } = ["GDS"];
-    };
+	public record AmadeusFlightOfferQuery
+	{
+		public string? CurrencyCode { get; init; }
+		public OriginDestination[]? OriginDestinations { get; init; }
+		public ExtendedTravelInfo[]? Travelers { get; init; }
+		public SearchCriteria SearchCriteria { get; init; } = new();
+		public string[] Sources { get; } = ["GDS"];
+	};
 
-    public record OriginDestination(
-        string Id,
-        string OriginLocationCode,
-        string DestinationLocationCode,
-        DateTimeRange DepartureDateTimeRange,
-        DateTimeRange ArrivalDateTimeRange
-    );
+	public record OriginDestination
+	{
+		public string Id { get; init; } = "1";
+		public string? OriginLocationCode { get; init; }
+		public string? DestinationLocationCode { get; init; }
+		public DateTimeRange? DepartureDateTimeRange { get; init; }
+		public DateTimeRange? ArrivalDateTimeRange { get; init; }
+	}
 
-    public record ExtendedTravelInfo(string Id, string TravelerType);
+	public record DateTimeRange
+	{
+		public string? Date { get; init; }
+		public string? DateWindow { get; init; }
+		public string? Time { get; init; }
+		public string? TimeWindow { get; init; }
+	}
 
-    public record DateTimeRange(
-        string Date,
-        string DateWindow,
-        string Time,
-        string TimeWindow
-    );
+	public record ExtendedTravelInfo
+	{
+		public string Id { get; init; } = "1";
+		public string TravelerType { get; } = "ADULT"; //as the FlighsAPI does not distinct age, use the default "ADULT" value for external API
+	};
 
-    public record SearchCriteria(
-        bool AddOnewayOffers,
-        int MaxPrice,
-        FlightFilters FlightFilters
-    );
+	public record SearchCriteria
+	{
+		public bool AddOnewayOffers { get; init; } = true;
+		public int? MaxPrice { get; init; }
+		public FlightFilters? FlightFilters { get; init; }
+	}
 
-    public record FlightFilters(CarrierRestrictions CarrierRestrictions, ConnectionRestriction ConnectionRestriction);
-    public record CarrierRestrictions(string[] ExcludedCarrierCodes, string[] IncludedCarrierCodes);
-    public record ConnectionRestriction(int MaxNumberOfConnections);
+	public record FlightFilters
+	{
+		public CarrierRestrictions? CarrierRestrictions { get; init; }
+		public ConnectionRestriction? ConnectionRestriction { get; init; }
+	}
+
+	public record CarrierRestrictions
+	{
+		public string[]? ExcludedCarrierCodes { get; init; }
+		public string[]? IncludedCarrierCodes { get; init; }
+	}
+
+	public record ConnectionRestriction
+	{
+		public int MaxNumberOfConnections { get; init; }
+	}
 }
