@@ -1,12 +1,15 @@
 ﻿namespace FlightsAPI.Models.Amadeus
 {
-	public record AmadeusFlightOfferQuery
+	public record AmadeusFlightQuery : FlightQuery
 	{
 		public string? CurrencyCode { get; init; }
 		public OriginDestination[]? OriginDestinations { get; init; }
 		public ExtendedTravelInfo[]? Travelers { get; init; }
 		public SearchCriteria SearchCriteria { get; init; } = new();
 		public string[] Sources { get; } = ["GDS"];
+
+
+
 	};
 
 	public record OriginDestination

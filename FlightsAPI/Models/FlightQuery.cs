@@ -1,20 +1,20 @@
 ﻿namespace FlightsAPI.Models
 {
-    public record FlightOfferQuery(
+    public record FlightQuery(
         string CurrencyCode,
         OriginDestination OriginDestination,
         int PassengerAmount);
 
     public record OriginDestination(
-        int Id,
         string OriginLocationCode,
         string DestinationLocationCode,
         DateTimeRange DepartureDateTimeRange,
         DateTimeRange ArrivalDateTimeRange
     );
 
-    public record DateTimeRange(
-        string Date, //ISO 8601 format (YYYY-MM-DD)
-        string DateWindow
-    );
+    public record DateTimeRange
+    {
+        public string Date = DateTime.Now.ToString("yyyy-MM-dd");
+        public string? DateWindow;
+	}
 }
