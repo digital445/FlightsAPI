@@ -1,6 +1,6 @@
 ﻿using FlightsAPI.Infrastructure.ExternalApis.Interfaces;
 using FlightsAPI.Models;
-using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
@@ -9,11 +9,12 @@ using System.Text.Json;
 namespace FlightsAPI.Infrastructure.ExternalApis
 {
 	/// <summary>
-	/// TODO
+	/// Simple http-client which sends ApiRequest and receives HttpResponseMessage
 	/// </summary>
-	/// <param name="httpClientFactory"></param>
-	/// <param name="logger"></param>
-	public class SimpleClient(IHttpClientFactory httpClientFactory, ILogger<SimpleClient> logger) : ISimpleClient<HttpResponseMessage>
+	public class SimpleClient(
+		IHttpClientFactory httpClientFactory, 
+		ILogger<SimpleClient> logger,
+		IOptions<JsonSerializerOptions> jOptions) : ISimpleClient<HttpResponseMessage>
 	{
 		public async Task<HttpResponseMessage> SendAsync(ApiRequest apiRequest)
 		{
@@ -47,24 +48,24 @@ namespace FlightsAPI.Infrastructure.ExternalApis
 			}
 		}
 
-		private static HttpRequestMessage CreateMessage(ApiRequest apiRequest)
+		private HttpRequestMessage CreateMessage(ApiRequest apiRequest)
 		{
+			string json = JsonSerializer.Serialize(apiRequest.Data, jOptions.Value);
 			HttpRequestMessage message = new()
 			{
 				Method = apiRequest.Method,
 				RequestUri = new Uri(apiRequest.Url),
 				Content = apiRequest.Data != null
-					? new StringContent(
-						JsonSerializer.Serialize(apiRequest.Data),
-						Encoding.UTF8,
-						"application/json"
-					  )
+					? new StringContent(json, Encoding.UTF8, "application/json")
 					: null
 			};
 
-			foreach (var header in apiRequest.AdditionalHeaders) 
+			if (apiRequest.AdditionalHeaders != null)
 			{
-				message.Headers.Add(header.Key, header.Value);
+                foreach (var header in apiRequest.AdditionalHeaders) 
+				{
+					message.Headers.Add(header.Key, header.Value);
+				}
 			}
 
 			return message;

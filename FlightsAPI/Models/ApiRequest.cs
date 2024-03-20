@@ -4,10 +4,10 @@ namespace FlightsAPI.Models
 {
 	public record ApiRequest(
 		HttpMethod Method,
-		Dictionary<string, string> AdditionalHeaders,
+		Dictionary<string, string>? AdditionalHeaders,
 		string Url,
 		object Data,
-		string AccessToken
+		string? AccessToken
 	);
 }
 	
