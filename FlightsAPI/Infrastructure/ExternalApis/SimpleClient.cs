@@ -12,45 +12,36 @@ namespace FlightsAPI.Infrastructure.ExternalApis
 	/// Simple http-client which sends ApiRequest and receives HttpResponseMessage
 	/// </summary>
 	public class SimpleClient(
-		IHttpClientFactory httpClientFactory, 
-		ILogger<SimpleClient> logger,
-		IOptions<JsonSerializerOptions> jOptions) : ISimpleClient<HttpResponseMessage>
+		IHttpClientFactory HttpClientFactory, 
+		IOptions<JsonSerializerOptions> JOptions) : ISimpleClient<HttpResponseMessage>
 	{
 		public async Task<HttpResponseMessage> SendAsync(ApiRequest apiRequest)
 		{
-			try
-			{
-				using var client = httpClientFactory.CreateClient("ExternalAPI");
+			using var client = HttpClientFactory.CreateClient("ExternalAPI");
 
-				InjectAccessToken(apiRequest, client);
-				HttpRequestMessage message = CreateMessage(apiRequest);
+			InjectAccessToken(apiRequest.AccessToken, client);
+			HttpRequestMessage message = CreateMessage(apiRequest);
 
-				HttpResponseMessage httpResponse = await client.SendAsync(message);
+			HttpResponseMessage httpResponse = await client.SendAsync(message);
 
-				return httpResponse;
-			}
-			catch (Exception ex)
-			{
-				logger.LogError(ex, "Exception occured while getting the response from the external API.");
-				return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
-			}
+			return httpResponse;
 		}
 
 		/// <summary>
 		/// Inject the external service access token into client's default headers.
 		/// </summary>
-		private static void InjectAccessToken(ApiRequest apiRequest, HttpClient client)
+		private static void InjectAccessToken(string? accessToken, HttpClient client)
 		{
 			client.DefaultRequestHeaders.Clear();
-			if (!string.IsNullOrEmpty(apiRequest.AccessToken))
+			if (!string.IsNullOrEmpty(accessToken))
 			{
-				client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiRequest.AccessToken);
+				client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 			}
 		}
 
 		private HttpRequestMessage CreateMessage(ApiRequest apiRequest)
 		{
-			string json = JsonSerializer.Serialize(apiRequest.Data, jOptions.Value);
+			string json = JsonSerializer.Serialize(apiRequest.Data, JOptions.Value);
 			HttpRequestMessage message = new()
 			{
 				Method = apiRequest.Method,
