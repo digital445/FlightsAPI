@@ -1,31 +1,68 @@
-﻿using static FlightsAPI.Enumerations;
+﻿using FlightsAPI.Models.Amadeus;
+using static FlightsAPI.Enumerations;
 
 namespace FlightsAPI.Models
 {
-    public record FlightOffer(
-        int Id,
-        FlightProvider FlightProvider,
-        bool OneWay,
-        List<Itinerary> Itineraries,
-        Price Price);
+	public record FlightOffer
+	{
+		public string? Id { get; init; }
+		public FlightProvider FlightProvider { get; init; }
+		public Itinerary[]? Itineraries { get; init; }
+		public Price? Price { get; init; }
+		public string[]? ValidatingAirlineCodes { get; init; }
+		public TravelerPricing[]? TravelerPricings { get; init; }
 
-    /// <summary>
-    /// Avia Route
-    /// </summary>
-    public record Itinerary(string Duration, List<Segment> Segments);
+	}
 
-    /// <summary>
-    /// Point-to-point flight
-    /// </summary>
-    public record Segment(
-        int Id,
-        Departure Departure,
-        Arrival Arrival,
-        string FlightNumber, //carrierCode and number
-        string AircraftCode,
-        string Duration); //ISO 8601 format
+	/// <summary>
+	/// Avia Route
+	/// </summary>
+	public record Itinerary
+	{
+		public TimeSpan? Duration { get; init; }
+		public Segment[]? Segments { get; init; }
+	}
 
-    public record Departure(string IataCode, DateTime At);
-    public record Arrival(string IataCode, DateTime At);
-    public record Price(string Currency, decimal Total);
+	/// <summary>
+	/// Point-to-point flight
+	/// </summary>
+	public record Segment
+	{
+		public string? Id { get; init; }
+		public Airport? Departure { get; init; }
+		public Airport? Arrival { get; init; }
+		public string? CarrierCode { get; init; }
+		public string? Number { get; init; }
+		public Aircraft? Aircraft { get; init; }
+		public TimeSpan? Duration { get; init; } // ISO 8601 format (PnYnMnDTnHnMnS)
+	}
+
+	public record Airport
+	{
+		public string? IataCode { get; init; }
+		public DateTime At { get; init; }
+	}
+	public record Aircraft
+	{
+		public string? Code { get; init; }
+	}
+
+	public record Price
+	{
+		public string? Currency { get; init; }
+		public string? Total { get; init; }
+	}
+	public record TravelerPricing
+	{
+		public string? TravelerId { get; init; }
+		public string? FareOption { get; init; }
+		public string? TravelerType { get; init; }
+		public FareDetailsBySegment[]? FareDetailsBySegment { get; init; }
+	}
+
+	public record FareDetailsBySegment
+	{
+		public string? SegmentId { get; init; }
+		public string? Class { get; init; }
+	}
 }
