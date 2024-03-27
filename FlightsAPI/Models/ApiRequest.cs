@@ -1,13 +1,11 @@
-﻿using System.Net.Http.Headers;
-
-namespace FlightsAPI.Models
+﻿namespace FlightsAPI.Models
 {
-	public record ApiRequest(
-		HttpMethod Method,
-		Dictionary<string, string>? AdditionalHeaders,
-		string Url,
-		object Data,
-		string? AccessToken
-	);
+	public record ApiRequest
+	{
+		public HttpMethod Method { get; init; } = HttpMethod.Get;
+		public Dictionary<string, string>? AdditionalHeaders { get; init; }
+		public string Url { get; init; } = "";
+		public object? Data { get; init; }
+		public string AccessToken { get; init; } = "";
+	}
 }
-	
