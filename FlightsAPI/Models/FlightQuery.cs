@@ -12,8 +12,6 @@
         public DateRange ReturnDate { get; init; } = new DateRange();
 
         public SearchCriteria? SearchCriteria { get; init; }
-
-        public int PassengerAmount { get; init; } = 1;
 	}
 	public record DateRange
     {

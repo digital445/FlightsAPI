@@ -25,8 +25,7 @@ namespace MappingAndSerialization
 				OriginLocationCode = "NYC",
 				DestinationLocationCode = "MAD",
 				DepartureDate = new DateRange { Date = "2024-04-15" },
-				ReturnDate = new DateRange { Date = "2024-04-16" },
-				PassengerAmount = 3
+				ReturnDate = new DateRange { Date = "2024-04-16" }
 			};
 
 			var actual = _mapper.Map<AmadeusFlightQuery>(flightQuery);
@@ -51,9 +50,7 @@ namespace MappingAndSerialization
 					}
 				],
 				Travelers = [
-					new AmTravelerInfo { Id = "1", TravelerType = "ADULT" },
-					new AmTravelerInfo { Id = "2", TravelerType = "ADULT" },
-					new AmTravelerInfo { Id = "3", TravelerType = "ADULT" }
+					new AmShortTravelerInfo { Id = "1", TravelerType = "ADULT" }
 				],
 				Sources = ["GDS"]
 			};
@@ -68,7 +65,7 @@ namespace MappingAndSerialization
 		[Fact]
 		public void FlightQueryDeserialization()
 		{
-			string queryJson = "{\"currencyCode\":\"USD\",\"OriginLocationCode\":\"NYC\",\"DestinationLocationCode\":\"MAD\",\"DepartureDate\":{\"Date\":\"2024-04-15\"},\"ReturnDate\":{\"Date\":\"2024-04-16\"},\"passengerAmount\":3}";
+			string queryJson = "{\"currencyCode\":\"USD\",\"OriginLocationCode\":\"NYC\",\"DestinationLocationCode\":\"MAD\",\"DepartureDate\":{\"Date\":\"2024-04-15\"},\"ReturnDate\":{\"Date\":\"2024-04-16\"}}";
 			var actual = JsonSerializer.Deserialize<FlightQuery>(queryJson, _jOptions);
 
 			var expected = new FlightQuery()
@@ -77,8 +74,7 @@ namespace MappingAndSerialization
 				OriginLocationCode = "NYC",
 				DestinationLocationCode = "MAD",
 				DepartureDate = new DateRange { Date = "2024-04-15" },
-				ReturnDate = new DateRange { Date = "2024-04-16" },
-				PassengerAmount = 3
+				ReturnDate = new DateRange { Date = "2024-04-16" }
 			};
 
 			Assert.Equal(expected, actual);

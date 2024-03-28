@@ -4,7 +4,7 @@
 	{
 		public string? CurrencyCode { get; init; }
 		public AmOriginDestination[]? OriginDestinations { get; init; }
-		public AmTravelerInfo[]? Travelers { get; init; }
+		public AmShortTravelerInfo[]? Travelers { get; init; }
 		public AmSearchCriteria? SearchCriteria { get; init; }
 		public string[] Sources { get; init; } = ["GDS"];
 	};
@@ -26,10 +26,10 @@
 		public string? TimeWindow { get; init; }
 	}
 
-	public record AmTravelerInfo
+	public record AmShortTravelerInfo
 	{
-		public string Id { get; init; } = "1";
-		public string TravelerType { get; init; } = "ADULT"; //as the FlighsAPI does not distinct age, use the default "ADULT" value for external API
+		public string? Id { get; init; }
+		public string? TravelerType { get; init; }
 	};
 
 	public record AmSearchCriteria

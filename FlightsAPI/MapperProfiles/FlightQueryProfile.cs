@@ -10,10 +10,13 @@ namespace FlightsAPI.MapperProfiles
 		{
 			CreateMap<FlightQuery, AmadeusFlightQuery>()
 				.ForMember(dest => dest.OriginDestinations, opt => opt.MapFrom(src => CreateOriginDestinations(src)))
-				.ForMember(dest => dest.Travelers, opt => opt.MapFrom(src =>
-					Enumerable.Range(1, src.PassengerAmount)
-						.Select(i => new AmTravelerInfo { Id = i.ToString() })
-						.ToArray()
+				.ForMember(dest => dest.Travelers, opt => opt.MapFrom(src => 
+					new[] { 
+						new AmShortTravelerInfo { 
+							Id = "1",				//we always look for one person in FlightsAPI
+							TravelerType = "ADULT"	//as the FlighsAPI does not distinct age, use the default "ADULT" value for external API
+						} 
+					}
 				));
 			CreateMap<SearchCriteria, AmSearchCriteria>()
 				.ForMember(dest => dest.FlightFilters, opt => opt.MapFrom(src => CreateFlightFilters(src)));
