@@ -1,6 +1,6 @@
 ﻿namespace FlightsAPI.Models
 {
-	public record BookingQuery
+	public record BookingOrder
 	{
 		public FlightOffer? FlightOffer { get; init; }
 		public TravelerInfo? Traveler { get; init; }
