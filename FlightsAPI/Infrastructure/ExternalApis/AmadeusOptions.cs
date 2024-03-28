@@ -2,10 +2,11 @@
 {
 	public record AmadeusOptions
 	{
-		public string? AccessToken { get; init; }
-		public string? ClientId { get; init; }
-		public string? ClientSecret { get; init; }
-		public string? SearchBaseUrl { get; init; }
-		public string? BookingBaseUrl { get; init; }
+		public string ClientId { get; init; } = "";
+		public string ClientSecret { get; init; } = "";
+		public string SearchEndpoint { get; init; } = "";
+		public string BookingEndpoint { get; init; } = "";
+		public string TokenEndpoint { get; init; } = "";
 	}
 }
+	

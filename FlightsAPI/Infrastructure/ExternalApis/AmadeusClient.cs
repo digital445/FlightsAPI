@@ -7,26 +7,28 @@ using System.Text.Json;
 namespace FlightsAPI.Infrastructure.ExternalApis
 {
     public class AmadeusClient(
-        ISimpleClient<HttpResponseMessage> Client, 
+        ISimpleClient<HttpResponseMessage> Client,
+        ITokenService TokenService,
         IOptions<AmadeusOptions> Options,
         IOptions<JsonSerializerOptions> JOptions,
         ILogger<AmadeusClient> Logger) : IAmadeusClient
 	{
-        private readonly string? _accessToken = Options.Value.AccessToken;
-        private readonly string _searchBaseUrl = Options.Value.SearchBaseUrl ?? "";
-        private readonly string _bookingBaseUrl = Options.Value.BookingBaseUrl ?? "";
+        private readonly string _searchEndpoint = Options.Value.SearchEndpoint ?? "";
+        private readonly string _bookingEndpoint = Options.Value.BookingEndpoint ?? "";
 
 		public async Task<IEnumerable<AmadeusFlightOffer>> GetFlightOffers(AmadeusFlightQuery query)
         {
             try
             {
                 Dictionary<string, string> additionalHeaders = new() {{ "X-HTTP-Method-Override", "GET"}};
-                ApiRequest request = new(
-                    Method: HttpMethod.Post,
-                    AdditionalHeaders : additionalHeaders, 
-                    Url: _searchBaseUrl + "/flight-offers",
-                    Data: query,
-                    AccessToken: _accessToken);
+                ApiRequest request = new()
+                {
+                    Method = HttpMethod.Post,
+                    AdditionalHeaders = additionalHeaders,
+                    Url = _searchEndpoint,
+                    Data = query,
+                    AccessToken = await TokenService.GetAccessToken()
+                };
 
                 HttpResponseMessage httpResponse = await Client.SendAsync(request);
 			    string apiContent = await httpResponse.Content.ReadAsStringAsync();
@@ -40,16 +42,36 @@ namespace FlightsAPI.Infrastructure.ExternalApis
 			}
 		}
         
-		public Task<AmadeusBookingResult> BookFlights(AmadeusBookingQuery query)
+		public async Task<AmadeusBookingResult> BookFlights(AmadeusBookingQuery query)
 		{
-			throw new NotImplementedException();
-		}
+			try
+			{
+                ApiRequest request = new()
+                {
+                    Method = HttpMethod.Post,
+                    AdditionalHeaders = null,
+                    Url = _bookingEndpoint,
+                    Data = query,
+                    AccessToken = "_accessToken"
+                };
 
-        private AmadeusFlightOffer[] ExtractFlightOffers(int statusCode, string apiContent)
+				HttpResponseMessage httpResponse = await Client.SendAsync(request);
+				string apiContent = await httpResponse.Content.ReadAsStringAsync();
+
+				return new AmadeusBookingResult();
+			}
+			catch (Exception ex)
+			{
+				Logger.LogError(ex, "Cannot get flight offers.");
+				return new AmadeusBookingResult();
+			}
+		}
+             
+		private AmadeusFlightOffer[] ExtractFlightOffers(int statusCode, string apiContent)
         {
             if (statusCode == 200)
             {
-				var amadeusResponse = JsonSerializer.Deserialize<AmadeusResponse>(apiContent, JOptions.Value);
+				var amadeusResponse = JsonSerializer.Deserialize<AmadeusFlightResponse>(apiContent, JOptions.Value);
                 if (amadeusResponse?.Data != null)
                 {
 				    Logger.LogInformation("Got response from Amadeus API.");
