@@ -4,11 +4,11 @@ using FlightsAPI.Models.Amadeus;
 
 namespace FlightsAPI.MapperProfiles
 {
-	public class BookingQueryProfile : Profile
+	public class BookingOrderProfile : Profile
 	{
-		public BookingQueryProfile()
+		public BookingOrderProfile()
 		{
-			CreateMap<BookingQuery, AmadeusBookingQuery>()
+			CreateMap<BookingOrder, AmadeusBookingOrder>()
 				.ConstructUsing(MapQueryToAmQuery);
 			CreateMap<TravelerInfo, AmTravelerInfo>();
 			CreateMap<TravelerName, AmTravelerName>();
@@ -23,9 +23,9 @@ namespace FlightsAPI.MapperProfiles
 						Number = src.Number
 					}];
 		}
-		private static AmadeusBookingQuery MapQueryToAmQuery(BookingQuery src, ResolutionContext context)
+		private static AmadeusBookingOrder MapQueryToAmQuery(BookingOrder src, ResolutionContext context)
 		{
-			return new AmadeusBookingQuery
+			return new AmadeusBookingOrder
 			{
 				Data = new OrderData
 				{

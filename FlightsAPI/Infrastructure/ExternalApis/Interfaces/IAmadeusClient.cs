@@ -3,7 +3,7 @@ using FlightsAPI.Models.Amadeus;
 
 namespace FlightsAPI.Infrastructure.ExternalApis.Interfaces
 {
-	public interface IAmadeusClient : IFlightSearch<AmadeusFlightQuery, AmadeusFlightOffer>, IFlightBook<AmadeusBookingQuery, AmadeusBookingResult>
+	public interface IAmadeusClient : IFlightSearch<AmadeusFlightQuery, AmadeusFlightOffer>, IFlightBook<AmadeusBookingOrder, AmadeusBookingResult>
 	{
 	}
 }

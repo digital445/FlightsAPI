@@ -18,7 +18,7 @@ namespace FlightsAPI.Domain
 
 			return flightOffers;
 		}
-		public Task<BookingResult> BookFlights(BookingQuery query)
+		public Task<BookingResult> BookFlights(BookingOrder query)
 		{
 			throw new NotImplementedException();
 		}
