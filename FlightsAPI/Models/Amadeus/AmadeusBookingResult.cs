@@ -1,6 +1,8 @@
 ﻿namespace FlightsAPI.Models.Amadeus
 {
-	public class AmadeusBookingResult
+	public record AmadeusBookingResult
 	{
-	}
+        public Issue[]? Warnings { get; init; }
+        public AmadeusBookingOrder? Data { get; init; }
+    }
 }
