@@ -1,9 +1,33 @@
+using FlightsAPI.Infrastructure.ExternalApis;
+using System.Text.Json;
+using FlightsAPI.Apis;
+using FlightsAPI.Infrastructure.ExternalApis.Interfaces;
+using FlightsAPI.Domain.Interfaces;
+using System.Text.Json.Serialization;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<JsonSerializerOptions>(options =>
+{
+	options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+	options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+	options.PropertyNameCaseInsensitive = true;
+	options.Converters.Add(new JsonStringEnumConverter());
+});
+
+builder.Services.Configure<AmadeusOptions>(builder.Configuration.GetSection("Amadeus"));
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+builder.Services.AddHttpClient<ISimpleClient<HttpResponseMessage>, SimpleClient>();
+builder.Services.AddScoped<ISimpleClient<HttpResponseMessage>, SimpleClient>();
+builder.Services.AddScoped<IAmadeusClient, AmadeusClient>();
+builder.Services.AddScoped<IFlightService, AmadeusAdapter>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 var app = builder.Build();
 
@@ -16,29 +40,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-	"Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.MapGroup("/api/v1/flights")
+	.WithTags("Flights API")
+	.MapFlightsApi();
 
-app.MapGet("/weatherforecast", () =>
-{
-	var forecast = Enumerable.Range(1, 5).Select(index =>
-		new WeatherForecast
-		(
-			DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-			Random.Shared.Next(-20, 55),
-			summaries[Random.Shared.Next(summaries.Length)]
-		))
-		.ToArray();
-	return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
 
 app.Run();
-
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-	public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
