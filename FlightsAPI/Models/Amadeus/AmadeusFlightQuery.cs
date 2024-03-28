@@ -4,7 +4,7 @@
 	{
 		public string? CurrencyCode { get; init; }
 		public AmOriginDestination[]? OriginDestinations { get; init; }
-		public AmShortTravelerInfo[]? Travelers { get; init; }
+		public AmShortTravelerInfo[]? Travelers { get; init; } = [new AmShortTravelerInfo()];
 		public AmSearchCriteria? SearchCriteria { get; init; }
 		public string[] Sources { get; init; } = ["GDS"];
 	};
@@ -28,8 +28,8 @@
 
 	public record AmShortTravelerInfo
 	{
-		public string? Id { get; init; }
-		public string? TravelerType { get; init; }
+		public string? Id { get; init; } = "1"; //we always look for one person in FlightsAPI
+		public string? TravelerType { get; init; } = "ADULT"; //as the FlighsAPI does not distinct age, use the default "ADULT" value for external API
 	};
 
 	public record AmSearchCriteria
