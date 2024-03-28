@@ -10,6 +10,14 @@
 		public Issue[]? Warnings { get; init; }
 	}
 
+	public record AuthorizationError
+	{
+		public string? Error { get; init; }
+		public string? ErrorDescription { get; init; }
+		public int Code { get; init; }
+		public string? Title { get; init; }
+	}
+
 	public record Issue
 	{
 		public long Code { get; init; } = -1;
