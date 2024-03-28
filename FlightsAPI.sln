@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34616.47
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlightsAPI", "FlightsAPI\FlightsAPI.csproj", "{89CECB86-DCFC-4C3F-AC7F-C148BF6F29E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FlightsAPI", "FlightsAPI\FlightsAPI.csproj", "{89CECB86-DCFC-4C3F-AC7F-C148BF6F29E0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{953FEA5F-4F25-4D09-BF87-B06293C3F83E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{423E39DB-661E-4BF5-89E9-11BBF0155DE8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MappingAndSerialization", "MappingTests\MappingAndSerialization.csproj", "{DE0570A9-E8E0-453C-93D4-514079E7FCA4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +21,17 @@ Global
 		{89CECB86-DCFC-4C3F-AC7F-C148BF6F29E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89CECB86-DCFC-4C3F-AC7F-C148BF6F29E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89CECB86-DCFC-4C3F-AC7F-C148BF6F29E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE0570A9-E8E0-453C-93D4-514079E7FCA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE0570A9-E8E0-453C-93D4-514079E7FCA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE0570A9-E8E0-453C-93D4-514079E7FCA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE0570A9-E8E0-453C-93D4-514079E7FCA4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{89CECB86-DCFC-4C3F-AC7F-C148BF6F29E0} = {953FEA5F-4F25-4D09-BF87-B06293C3F83E}
+		{DE0570A9-E8E0-453C-93D4-514079E7FCA4} = {423E39DB-661E-4BF5-89E9-11BBF0155DE8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {07C7F395-B01A-4B56-84D8-A8D5C712DFE7}
