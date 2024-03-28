@@ -1,7 +1,6 @@
 ﻿using FlightsAPI.Infrastructure.ExternalApis.Interfaces;
 using FlightsAPI.Models;
 using Microsoft.Extensions.Options;
-using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -41,14 +40,21 @@ namespace FlightsAPI.Infrastructure.ExternalApis
 
 		private HttpRequestMessage CreateMessage(ApiRequest apiRequest)
 		{
-			string json = JsonSerializer.Serialize(apiRequest.Data, JOptions.Value);
+			HttpContent? content = apiRequest.Data switch
+			{
+				null => null,
+				IEnumerable<KeyValuePair<string, string>> collection => new FormUrlEncodedContent(collection),
+				_ => new StringContent(
+					JsonSerializer.Serialize(apiRequest.Data, JOptions.Value), 
+					Encoding.UTF8, 
+					"application/json")
+			};
+
 			HttpRequestMessage message = new()
 			{
 				Method = apiRequest.Method,
 				RequestUri = new Uri(apiRequest.Url),
-				Content = apiRequest.Data != null
-					? new StringContent(json, Encoding.UTF8, "application/json")
-					: null
+				Content = content
 			};
 
 			if (apiRequest.AdditionalHeaders != null)
