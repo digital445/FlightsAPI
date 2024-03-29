@@ -31,9 +31,8 @@ namespace FlightsAPI.Infrastructure.ExternalApis
                 };
 
                 HttpResponseMessage httpResponse = await Client.SendAsync(request);
-			    string apiContent = await httpResponse.Content.ReadAsStringAsync();
 
-                return ExtractFlightOffers((int)httpResponse.StatusCode, apiContent);
+                return await ExtractFlightOffers(httpResponse);
             }
             catch (Exception ex)
             {
@@ -42,7 +41,7 @@ namespace FlightsAPI.Infrastructure.ExternalApis
 			}
 		}
         
-		public async Task<AmadeusBookingResult> BookFlights(AmadeusBookingQuery query)
+		public async Task<AmadeusBookingOrder> BookFlights(AmadeusBookingOrder query)
 		{
 			try
 			{
@@ -52,41 +51,68 @@ namespace FlightsAPI.Infrastructure.ExternalApis
                     AdditionalHeaders = null,
                     Url = _bookingEndpoint,
                     Data = query,
-                    AccessToken = "_accessToken"
+                    AccessToken = await TokenService.GetAccessToken()
                 };
 
 				HttpResponseMessage httpResponse = await Client.SendAsync(request);
-				string apiContent = await httpResponse.Content.ReadAsStringAsync();
 
-				return new AmadeusBookingResult();
+				return await ExtractBookingOrder(httpResponse);
 			}
 			catch (Exception ex)
 			{
-				Logger.LogError(ex, "Cannot get flight offers.");
-				return new AmadeusBookingResult();
+				Logger.LogError(ex, "Cannot book the flight.");
+				return new AmadeusBookingOrder();
 			}
 		}
-             
-		private AmadeusFlightOffer[] ExtractFlightOffers(int statusCode, string apiContent)
-        {
-            if (statusCode == 200)
-            {
-				var amadeusResponse = JsonSerializer.Deserialize<AmadeusFlightResponse>(apiContent, JOptions.Value);
-                if (amadeusResponse?.Data != null)
-                {
-				    Logger.LogInformation("Got response from Amadeus API.");
-                    return amadeusResponse.Data;
-                }
-            }
-			Logger.LogError("Status {Status}: cannot get flight offers from Amadeus", statusCode);
 
-			if (statusCode >= 400)
+		private async Task<AmadeusBookingOrder> ExtractBookingOrder(HttpResponseMessage httpResponse)
+		{
+			string apiContent = await httpResponse.Content.ReadAsStringAsync();
+			if (httpResponse.IsSuccessStatusCode)
+			{
+				var bookingResult = JsonSerializer.Deserialize<AmadeusBookingResult>(apiContent, JOptions.Value);
+				if (bookingResult?.Warnings != null)
+				{
+					bookingResult.Warnings?
+						.ToList()
+						.ForEach(wrn => Logger.LogWarning("[{Code}] {Title}: {Detail}", wrn.Code, wrn.Title, wrn.Detail));
+				}
+				if (bookingResult?.Data != null)
+				{
+					Logger.LogInformation("Got booking result from Amadeus API.");
+					return bookingResult.Data;
+				}
+			}
+			else
+			{
+				var errorResult = JsonSerializer.Deserialize<Error>(apiContent, JOptions.Value);
+				errorResult?.Errors?
+					.ToList()
+					.ForEach(er => Logger.LogError("[{Code}] {Title}: {Detail}", er.Code, er.Title, er.Detail));
+			}
+			return new AmadeusBookingOrder();
+		}
+
+		private async Task<AmadeusFlightOffer[]> ExtractFlightOffers(HttpResponseMessage httpResponse)
+        {
+			string apiContent = await httpResponse.Content.ReadAsStringAsync();
+			if (httpResponse.IsSuccessStatusCode)
             {
-				var errorResponse = JsonSerializer.Deserialize<Error>(apiContent, JOptions.Value);
-				errorResponse?.Errors?
+				var flightResult = JsonSerializer.Deserialize<AmadeusFlightResult>(apiContent, JOptions.Value);
+                if (flightResult?.Data != null)
+                {
+				    Logger.LogInformation("Got flight offers from Amadeus API.");
+                    return flightResult.Data;
+                }
+			    Logger.LogError("The Amadeus response is empty.");
+            }
+            else
+            {
+			    var errorResult = JsonSerializer.Deserialize<Error>(apiContent, JOptions.Value);
+			    errorResult?.Errors?
                     .ToList()
                     .ForEach(er => Logger.LogError("[{Code}] {Title}: {Detail}", er.Code, er.Title, er.Detail));
-			}
+            }
             return [];
         }
 	}
