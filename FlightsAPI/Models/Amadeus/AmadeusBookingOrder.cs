@@ -1,19 +1,19 @@
 ﻿namespace FlightsAPI.Models.Amadeus
 {
-	public record AmadeusBookingOrder
+	public record AmadeusBookingQuery
 	{
-		public OrderData? Data { get; init; }
+		public AmadeusBookingOrder? Data { get; init; }
 	}
-	public record OrderData
+	public record AmadeusBookingOrder
 	{
 		public string? Id { get; init; }
 		public string Type { get; } = "flight-order";
-        public AssosiatedRecord[]? AssociatedRecords { get; init; }
+        public AmAssosiatedRecord[]? AssociatedRecords { get; init; }
         public AmadeusFlightOffer[]? FlightOffers { get; init; }
 		public AmTravelerInfo[]? Travelers { get; init; }
 	}
 
-	public record AssosiatedRecord
+	public record AmAssosiatedRecord
 	{
         public string? Reference { get; init; }
 		public string? CreationDate { get; init; }

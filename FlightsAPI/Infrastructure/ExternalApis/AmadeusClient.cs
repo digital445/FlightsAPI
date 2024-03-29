@@ -41,7 +41,7 @@ namespace FlightsAPI.Infrastructure.ExternalApis
 			}
 		}
         
-		public async Task<AmadeusBookingOrder> BookFlights(AmadeusBookingOrder query)
+		public async Task<AmadeusBookingOrder> BookFlights(AmadeusBookingQuery query)
 		{
 			try
 			{
