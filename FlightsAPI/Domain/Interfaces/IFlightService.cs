@@ -2,7 +2,7 @@
 
 namespace FlightsAPI.Domain.Interfaces
 {
-    public interface IFlightService : IFlightSearch<FlightQuery, FlightOffer>, IFlightBook<BookingOrder, BookingOrder>
+    public interface IFlightService : IFlightSearch<FlightQuery, FlightOffer>, IFlightBook<BookingOrder, BookingResult>
     {
     }
 }
