@@ -8,12 +8,13 @@ namespace FlightsAPI.Apis
 	{
 		public static IEndpointRouteBuilder MapFlightsApi(this IEndpointRouteBuilder app)
 		{
-			app.MapPost("/flight-offers", GetFlightOffers);
+			app.MapPost("/search", GetFlightOffers);
+			app.MapPost("/book", BookFlights);
 
 			return app;
 		}
 
-		public static async Task<Results<Ok<IEnumerable<FlightOffer>>, IResult>> GetFlightOffers(
+		private static async Task<Results<Ok<IEnumerable<FlightOffer>>, IResult>> GetFlightOffers(
 			FlightQuery query, 
 			IFlightService flightService)
 		{
@@ -25,6 +26,16 @@ namespace FlightsAPI.Apis
 			}
 			return TypedResults.NoContent();
 		}
+		private static async Task<Results<Ok<IEnumerable<FlightOffer>>, IResult>> BookFlights(
+			BookingOrder query, 
+			IFlightService flightService)
+		{
+
+			var bookingResult = await flightService.BookFlights(query);
+			return TypedResults.Ok(bookingResult);
+		}
+
+		
 
 	}
 }
