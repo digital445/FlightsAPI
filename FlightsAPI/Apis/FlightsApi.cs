@@ -31,8 +31,8 @@ namespace FlightsAPI.Apis
 			IFlightService flightService)
 		{
 
-			var bookingResult = await flightService.BookFlights(query);
-			return TypedResults.Ok(bookingResult);
+			var bookingOrder = await flightService.BookFlights(query);
+			return TypedResults.Ok(bookingOrder);
 		}
 
 		

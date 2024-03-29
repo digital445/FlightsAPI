@@ -1,13 +1,14 @@
 ﻿using FlightsAPI.Domain.Interfaces;
+using FlightsAPI.Infrastructure.DataBases.Interfaces;
 using FlightsAPI.Models;
 
 namespace FlightsAPI.Infrastructure.DataBases
 {
-    public class FlightRepository(FlightDbContext dbContext) : IFlightService
+    public class FlightRepository() : IFlightRepository
 	{
-		public Task<IEnumerable<FlightOffer>> GetFlightOffers(FlightQuery query)
+		public async Task<IEnumerable<FlightOffer>> GetFlightOffers(FlightQuery query)
 		{
-			throw new NotImplementedException();
+			return [];
 		}
 		public Task<BookingResult> BookFlights(BookingOrder query)
 		{

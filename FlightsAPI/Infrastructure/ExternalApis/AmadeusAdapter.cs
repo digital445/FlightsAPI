@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using FlightsAPI.Domain.Interfaces;
 using FlightsAPI.Infrastructure.ExternalApis.Interfaces;
 using FlightsAPI.Models;
 using FlightsAPI.Models.Amadeus;
@@ -12,7 +11,7 @@ namespace FlightsAPI.Infrastructure.ExternalApis
 	/// </summary>
 	public class AmadeusAdapter(
 		IAmadeusClient AmadeusClient, 
-		IMapper Mapper) : IFlightService
+		IMapper Mapper) : IAmadeusAdapter
 	{
 
 		public async Task<IEnumerable<FlightOffer>> GetFlightOffers(FlightQuery query)

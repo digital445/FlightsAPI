@@ -4,6 +4,9 @@ using FlightsAPI.Apis;
 using FlightsAPI.Infrastructure.ExternalApis.Interfaces;
 using FlightsAPI.Domain.Interfaces;
 using System.Text.Json.Serialization;
+using FlightsAPI.Domain;
+using FlightsAPI.Infrastructure.DataBases;
+using FlightsAPI.Infrastructure.DataBases.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,7 +29,9 @@ builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddHttpClient<ISimpleClient<HttpResponseMessage>, SimpleClient>();
 builder.Services.AddScoped<ISimpleClient<HttpResponseMessage>, SimpleClient>();
 builder.Services.AddScoped<IAmadeusClient, AmadeusClient>();
-builder.Services.AddScoped<IFlightService, AmadeusAdapter>();
+builder.Services.AddScoped<IAmadeusAdapter, AmadeusAdapter>();
+builder.Services.AddScoped<IFlightRepository, FlightRepository>();
+builder.Services.AddScoped<IFlightService, FlightAggregationService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
 var app = builder.Build();
