@@ -9,29 +9,25 @@ namespace FlightsAPI.MapperProfiles
 		public BookingOrderProfile()
 		{
 			CreateMap<BookingOrder, AmadeusBookingOrder>()
-				.ConstructUsing(MapQueryToAmQuery);
+				.ConstructUsing(MapOrderToAmOrder);
 			CreateMap<TravelerInfo, AmTravelerInfo>();
 			CreateMap<TravelerName, AmTravelerName>();
 			CreateMap<ContactInfo, AmContactInfo>()
-				.ForMember(dest => dest.Phones, opt => opt.MapFrom(src => MapPhoneInfoToArray(src)));
+				.ForMember(dest => dest.Phones, opt => opt.MapFrom(MapPhoneToPhones));
+			CreateMap<PhoneInfo, AmPhoneInfo>();
 		}
-        private static AmPhoneInfo[] MapPhoneInfoToArray(ContactInfo src)
+
+		private AmPhoneInfo[]? MapPhoneToPhones(ContactInfo src, AmContactInfo dest, AmPhoneInfo[]? prop, ResolutionContext context)
 		{
-			return [new() {
-						DeviceType = src.PhoneType,
-						CountryCallingCode = src.CountryCallingCode,
-						Number = src.Number
-					}];
+			return [context.Mapper.Map<AmPhoneInfo>(src.Phone)];
 		}
-		private static AmadeusBookingOrder MapQueryToAmQuery(BookingOrder src, ResolutionContext context)
+
+		private AmadeusBookingOrder MapOrderToAmOrder(BookingOrder src, ResolutionContext context)
 		{
 			return new AmadeusBookingOrder
 			{
-				Data = new OrderData
-				{
-					FlightOffers = [context.Mapper.Map<AmadeusFlightOffer>(src.FlightOffer)],
-					Travelers = [context.Mapper.Map<AmTravelerInfo>(src.Traveler)]
-				}
+				FlightOffers = [context.Mapper.Map<AmadeusFlightOffer>(src.FlightOffer)],
+				Travelers = [context.Mapper.Map<AmTravelerInfo>(src.Traveler)]
 			};
 		}
 	}
