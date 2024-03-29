@@ -1,4 +1,7 @@
-﻿namespace FlightsAPI.Models
+﻿using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
+using static FlightsAPI.Enumerations;
+
+namespace FlightsAPI.Models
 {
 	public record FlightQuery
 	{
@@ -12,6 +15,7 @@
         public DateRange? ReturnDate { get; init; }
 
         public SearchCriteria? SearchCriteria { get; init; }
+        public SortCriteria SortCriteria { get; init; } = new() { Criteria = SortBy.None };
 	}
 	public record DateRange
     {
@@ -26,6 +30,11 @@
 		public int? MaxNumberOfConnections { get; init; }
 		public string[]? ExcludedCarrierCodes { get; init; }
 		public string[]? IncludedCarrierCodes { get; init; }
-
 	}
+	public record SortCriteria
+	{
+        public SortBy Criteria { get; init; }
+        public SortOrder Order { get; init; }
+
+    }
 }
