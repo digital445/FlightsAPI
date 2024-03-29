@@ -1,5 +1,4 @@
-﻿using FlightsAPI.Models.Amadeus;
-using static FlightsAPI.Enumerations;
+﻿using static FlightsAPI.Enumerations;
 
 namespace FlightsAPI.Models
 {
@@ -34,7 +33,7 @@ namespace FlightsAPI.Models
 		public string? CarrierCode { get; init; }
 		public string? Number { get; init; }
 		public Aircraft? Aircraft { get; init; }
-		public TimeSpan? Duration { get; init; } // ISO 8601 format (PnYnMnDTnHnMnS)
+		public TimeSpan? Duration { get; init; }
 	}
 
 	public record Airport
@@ -50,7 +49,7 @@ namespace FlightsAPI.Models
 	public record Price
 	{
 		public string? Currency { get; init; }
-		public string? Total { get; init; }
+		public decimal? Total { get; init; }
 	}
 	public record TravelerPricing
 	{

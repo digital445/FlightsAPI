@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using FlightsAPI.Models;
 using FlightsAPI.Models.Amadeus;
+using System.Globalization;
 using System.Xml;
 using static FlightsAPI.Enumerations;
 
@@ -25,7 +26,10 @@ namespace FlightsAPI.MapperProfiles
 				.ReverseMap()
 				.ForMember(dest => dest.At, opt => opt.MapFrom(src => ConvertToString(src.At)));
 			CreateMap<AmAircraft, Aircraft>().ReverseMap();
-			CreateMap<AmPrice, Price>().ReverseMap();
+			CreateMap<AmPrice, Price>()
+				.ForMember(dest => dest.Total, opt => opt.MapFrom(src => ConvertToDecimal(src.Total)))
+				.ReverseMap()
+				.ForMember(dest => dest.Total, opt => opt.MapFrom(src => ConvertToString(src.Total)));
 			CreateMap<AmTravelerPricing, TravelerPricing>().ReverseMap();
 			CreateMap<AmFareDetailsBySegment, FareDetailsBySegment>().ReverseMap();
 		}
@@ -42,5 +46,13 @@ namespace FlightsAPI.MapperProfiles
 		{
 			return dateTime.ToString("yyyy-MM-ddTHH:mm:ss");
 		}
+		private static decimal? ConvertToDecimal(string? price) =>
+			decimal.TryParse(price, CultureInfo.GetCultureInfo("en-US"), out decimal result) 
+				? result 
+				: null;
+		private static string? ConvertToString(decimal? price) =>
+			price != null 
+				? ((decimal)price).ToString(CultureInfo.GetCultureInfo("en-US")) 
+				: null;
 	}
 }
