@@ -9,7 +9,7 @@ namespace FlightsAPI.Infrastructure.DataBases
 		{
 			throw new NotImplementedException();
 		}
-		public Task<BookingResult> BookFlights(BookingOrder query)
+		public Task<BookingOrder> BookFlights(BookingOrder query)
 		{
 			throw new NotImplementedException();
 		}
