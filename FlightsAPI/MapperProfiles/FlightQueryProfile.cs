@@ -16,7 +16,7 @@ namespace FlightsAPI.MapperProfiles
 
 		private static AmOriginDestination[] CreateOriginDestinations(FlightQuery src)
 		{
-			AmOriginDestination[] array = new AmOriginDestination[src.ReturnDate.Date == null ? 1 : 2];
+			AmOriginDestination[] array = new AmOriginDestination[src.ReturnDate?.Date == null ? 1 : 2];
 			array[0] = new AmOriginDestination //outgoing flight
 			{
 				Id = "1",
@@ -24,8 +24,8 @@ namespace FlightsAPI.MapperProfiles
 				DestinationLocationCode = src.DestinationLocationCode,
 				DepartureDateTimeRange = new AmDateTimeRange
 				{
-					Date = src.DepartureDate.Date,
-					DateWindow = src.DepartureDate.DateWindow
+					Date = src.DepartureDate?.Date,
+					DateWindow = src.DepartureDate?.DateWindow
 				}
 			};
 			if (array.Length == 2)
@@ -37,8 +37,8 @@ namespace FlightsAPI.MapperProfiles
 					DestinationLocationCode = src.OriginLocationCode,
 					DepartureDateTimeRange = new AmDateTimeRange
 					{
-						Date = src.ReturnDate.Date,
-						DateWindow = src.ReturnDate.DateWindow
+						Date = src.ReturnDate?.Date,
+						DateWindow = src.ReturnDate?.DateWindow
 					}
 				};
 			}
