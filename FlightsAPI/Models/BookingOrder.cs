@@ -4,8 +4,14 @@
 	{
 		public FlightOffer? FlightOffer { get; init; }
 		public TravelerInfo? Traveler { get; init; }
+	}
 
-    }
+	public record AssosiatedRecord
+	{
+		public string? Reference { get; init; }
+		public string? CreationDate { get; init; }
+		public string? FlightOfferId { get; init; }
+	}
 
 	public record TravelerInfo
 	{
@@ -23,7 +29,11 @@
 	public record ContactInfo
 	{
 		public string? EmailAddress { get; init; }
-		public string? PhoneType { get; init; }
+		public PhoneInfo? Phone { get; init; }
+	}
+	public record PhoneInfo
+	{
+		public string? DeviceType { get; init; }
 		public string? CountryCallingCode { get; init; }
 		public string? Number { get; init; }
 	}
