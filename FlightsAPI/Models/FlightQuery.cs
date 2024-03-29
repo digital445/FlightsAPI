@@ -2,14 +2,14 @@
 {
 	public record FlightQuery
 	{
-		public string CurrencyCode { get; init; } = "EUR";
+		public string? CurrencyCode { get; init; }
 
 
         public string? OriginLocationCode { get; init; }
         public string? DestinationLocationCode { get; init; }
 
-        public DateRange DepartureDate { get; init; } = new DateRange();
-        public DateRange ReturnDate { get; init; } = new DateRange();
+        public DateRange? DepartureDate { get; init; }
+        public DateRange? ReturnDate { get; init; }
 
         public SearchCriteria? SearchCriteria { get; init; }
 	}
