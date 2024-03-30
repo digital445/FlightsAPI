@@ -2,7 +2,7 @@
 {
 	public record AmadeusFlightQuery
 	{
-		public string? CurrencyCode { get; init; }
+		public string CurrencyCode { get; init; } = "USD";
 		public AmOriginDestination[]? OriginDestinations { get; init; }
 		public AmShortTravelerInfo[]? Travelers { get; init; } = [new AmShortTravelerInfo()];
 		public AmSearchCriteria? SearchCriteria { get; init; }
