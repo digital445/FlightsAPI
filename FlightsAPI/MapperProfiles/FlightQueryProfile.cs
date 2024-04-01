@@ -24,7 +24,7 @@ namespace FlightsAPI.MapperProfiles
 				DestinationLocationCode = src.DestinationLocationCode,
 				DepartureDateTimeRange = new AmDateTimeRange
 				{
-					Date = src.DepartureDate?.Date,
+					Date = src.DepartureDate?.Date.ToString("yyyy-MM-dd"),
 					DateWindow = src.DepartureDate?.DateWindow
 				}
 			};
@@ -37,7 +37,7 @@ namespace FlightsAPI.MapperProfiles
 					DestinationLocationCode = src.OriginLocationCode,
 					DepartureDateTimeRange = new AmDateTimeRange
 					{
-						Date = src.ReturnDate?.Date,
+						Date = src.ReturnDate?.Date.ToString("yyyy-MM-dd"),
 						DateWindow = src.ReturnDate?.DateWindow
 					}
 				};
