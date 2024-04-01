@@ -16,7 +16,10 @@ namespace FlightsAPI.Models
 	}
 	public record DateRange
     {
-        public DateTime Date { get; init; }
+		private DateTime _date;
+
+		public DateTime Date { get => _date; init => _date = DateTime.SpecifyKind(value, DateTimeKind.Utc); } //date should be explicitly defined as UTC
+																											  //because of comparison with db values
 		public string? DateWindow { get; init; }
 		public DateTime MinDate => CalculateBoundaryDate(minimal: true);
 		public DateTime MaxDate => CalculateBoundaryDate(minimal: false);
@@ -45,6 +48,9 @@ namespace FlightsAPI.Models
 
 	public record SearchCriteria
 	{
+		/// <summary>
+		/// Maximum flight offers per flight provider
+		/// </summary>
 		public int? MaxFlightOffers { get; init; }
 		public int? MaxPrice { get; init; }
 		public int? MaxNumberOfConnections { get; init; }
