@@ -101,10 +101,16 @@ namespace FlightsAPI.Infrastructure.DataBases
 					.Take(Options.Value.MaxReturnFlights);
 				var returnFlights = returnFlightsQ.ToList();
 				returnFlights.ForEach(fl => fl.TicketFlights = fl.TicketFlights.Take(1));
-				return returnFlights.Select(retFlight => (OutFlight: outFlight, RetFlight: retFlight));
-			}).Where(twoWay => twoWay.RetFlight != null); //drop combinations without return flights
+				return returnFlights.Select<Flight, (Flight[] outSegments, Flight[] retSegments)>(retFlight => ([outFlight], [retFlight]));
+			}).Where(twoWay => twoWay.retSegments != null); //drop combinations without return flights
 
-			return Mapper.Map<IEnumerable<FlightOffer>>(allFlights);
+			var flightOffers = Mapper
+				.Map<IEnumerable<FlightOffer>>(allFlights)
+				.Select((fo, i) => { 
+					fo.Id = (i + 1).ToString(); 
+					return fo; 
+				});
+			return flightOffers;
 		}
 		public Task<BookingResult> BookFlights(BookingOrder query)
 		{

@@ -4,7 +4,7 @@ namespace FlightsAPI.Models
 {
 	public record FlightOffer
 	{
-		public string? Id { get; init; }
+		public string? Id { get; set; }
 		public FlightProvider FlightProvider { get; init; }
 		public Itinerary[]? Itineraries { get; init; }
 		public Price? Price { get; init; }
