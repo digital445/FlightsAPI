@@ -7,6 +7,9 @@ using System.Text.Json.Serialization;
 using FlightsAPI.Domain;
 using FlightsAPI.Infrastructure.DataBases;
 using FlightsAPI.Infrastructure.DataBases.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using FlightsAPI.MapperProfiles;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,14 +22,23 @@ builder.Services.Configure<JsonSerializerOptions>(options =>
 });
 
 builder.Services.Configure<AmadeusOptions>(builder.Configuration.GetSection("Amadeus"));
+builder.Services.Configure<FlightDbOptions>(builder.Configuration.GetSection("FlightDb"));
+string? dbConnectionString = builder.Configuration["FlightDb:ConnectionString"];
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
+//Add AutoMapper profiles manually because of using DI in one profile
+builder.Services.AddAutoMapper((provider, cfg) =>
+{
+	cfg.AddProfile(new FlightQueryProfile());
+	cfg.AddProfile(new FlightOfferProfile(provider.GetService<IOptions<FlightDbOptions>>()!));
+	cfg.AddProfile(new BookingOrderProfile());
+	cfg.AddProfile(new BookingResultProfile());
+}, assemblies: null);
 builder.Services.AddHttpClient<ISimpleClient<HttpResponseMessage>, SimpleClient>();
+builder.Services.AddDbContext<FlightDbContext>(opt => opt.UseNpgsql(dbConnectionString));
 builder.Services.AddScoped<ISimpleClient<HttpResponseMessage>, SimpleClient>();
 builder.Services.AddScoped<IAmadeusClient, AmadeusClient>();
 builder.Services.AddScoped<IAmadeusAdapter, AmadeusAdapter>();
