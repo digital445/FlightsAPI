@@ -63,5 +63,6 @@ namespace FlightsAPI.Models
 	{
 		public string? SegmentId { get; init; }
 		public string? Class { get; init; }
+		public string? Cabin { get; init; }
 	}
 }
