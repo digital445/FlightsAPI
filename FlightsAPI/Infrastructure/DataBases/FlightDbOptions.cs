@@ -4,7 +4,7 @@
 	{
         public string? ConnectionString { get; init; }
         /// <summary>
-        /// Minimum Connecting Time between consecutive flights
+        /// Minimum Connecting Time between consecutive flights, minutes
         /// </summary>
         public int MCT { get; init; }
 		/// <summary>
