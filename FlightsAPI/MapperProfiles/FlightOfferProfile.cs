@@ -5,7 +5,6 @@ using FlightsAPI.Models.Amadeus;
 using FlightsAPI.Models.FlightDb;
 using Microsoft.Extensions.Options;
 using System.Globalization;
-using System.Linq;
 using System.Xml;
 using static FlightsAPI.Enumerations;
 
@@ -41,49 +40,49 @@ namespace FlightsAPI.MapperProfiles
 			CreateMap<AmTravelerPricing, TravelerPricing>().ReverseMap();
 			CreateMap<AmFareDetailsBySegment, FareDetailsBySegment>().ReverseMap();
 
-			//Database Flight to FlightOffer
+			//Database Flights to FlightOffer
 			CreateMap<Flight[], FlightOffer>() //use this mapping for oneWay FlightOffers only
-				.ConstructUsing(outFlights => CreateFlightOffer(outFlights, null));
-			CreateMap<(Flight[] outSegments, Flight[] retSegments), FlightOffer>()
-				.ConstructUsing(pair => CreateFlightOffer(pair.outSegments, pair.retSegments));
+				.ConstructUsing(outRoute => CreateFlightOffer(outRoute, null));
+			CreateMap<(Flight[] outRoute, Flight[] retRoute), FlightOffer>()
+				.ConstructUsing(twoWay => CreateFlightOffer(twoWay.outRoute, twoWay.retRoute));
 		}
 
-		private FlightOffer CreateFlightOffer(Flight[] outSegments, Flight[]? retSegments) =>
+		private FlightOffer CreateFlightOffer(Flight[] outRoute, Flight[]? retRoute) =>
 			new FlightOffer
 			{
 				FlightProvider = FlightProvider.DemoDB,
-				Itineraries = CreateItineraries(outSegments, retSegments),
+				Itineraries = CreateItineraries(outRoute, retRoute),
 				Price = new Price
 				{
 					Currency = "USD",
-					Total = GetTotalPrice(outSegments, retSegments)
+					Total = GetTotalPrice(outRoute, retRoute)
 				},
 				TravelerPricings = [new TravelerPricing
 				{
 					TravelerId = "1",
 					TravelerType = "ADULT",
 					FareOption = "STANDARD",
-					FareDetailsBySegment = ExtractFareDetails(outSegments, retSegments)
+					FareDetailsBySegment = ExtractFareDetails(outRoute, retRoute)
 				}]
 			};
 
-		private static Itinerary[] CreateItineraries(Flight[] outFlights, Flight[]? retFlights)
+		private static Itinerary[] CreateItineraries(Flight[] outSegments, Flight[]? retSegments)
 		{
-			var itineraries = new Itinerary[retFlights == null ? 1 : 2];
+			var itineraries = new Itinerary[retSegments == null ? 1 : 2];
 
 			itineraries[0] = new Itinerary
 			{
-				Segments = CreateSegments(outFlights, 1),
-				Duration = CalculateItineraryDuration(outFlights)
+				Segments = CreateSegments(outSegments, 1),
+				Duration = CalculateItineraryDuration(outSegments)
 			};
 
-			if (retFlights == null)
+			if (retSegments == null)
 				return itineraries;
 
 			itineraries[1] = new Itinerary
 			{
-				Segments = CreateSegments(retFlights, outFlights.Length + 1),
-				Duration = CalculateItineraryDuration(retFlights)
+				Segments = CreateSegments(retSegments, outSegments.Length + 1),
+				Duration = CalculateItineraryDuration(retSegments)
 			};
 			return itineraries;
 		}
@@ -111,7 +110,7 @@ namespace FlightsAPI.MapperProfiles
 		private decimal? GetTotalPrice(Flight[] outSegments, Flight[]? retSegments) =>
 			GetOneWayTotalPrice(outSegments) 
 			+ 
-			(retSegments == null ? 0 : GetOneWayTotalPrice(outSegments));
+			(retSegments == null ? 0 : GetOneWayTotalPrice(retSegments));
 		private decimal? GetOneWayTotalPrice(Flight[] segments) =>
 			segments.Aggregate(0m, (acc, fl) => acc + fl.TicketFlights.FirstOrDefault()?.Amount ?? 0)
 				/ _flightDbOptions.UsdToRubConversionRate;
