@@ -4,7 +4,6 @@ using FlightsAPI.Models;
 using FlightsAPI.Models.FlightDb;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System.Diagnostics;
 using System.Linq.Expressions;
 
 namespace FlightsAPI.Infrastructure.DataBases
@@ -24,37 +23,33 @@ namespace FlightsAPI.Infrastructure.DataBases
 		{
 			var parameters = new Parameters(query, Options.Value);
 
-			List<Flight> outFlights = await RetrieveOutboundFlightsAsync(query, parameters);
+			Flight[][] outRoutes = await RetrieveOutboundRoutesAsync(query, parameters);
 
 			if (query.ReturnDate == null)
-				return MapToFlightOffers(outFlights);
+				return MapToFlightOffers(outRoutes);
 
-			var flightCombinations = await RetrieveFlightCombinationsAsync(outFlights, query, parameters);
+			var routeCombinations = await RetrieveRouteCombinationsAsync(outRoutes, query, parameters);
 
-			var flightOffers = MapToFlightOffers(flightCombinations);
-			SetFlightOfferIds(flightOffers);
-
-			return flightOffers;
+			return MapToFlightOffers(routeCombinations); ;
 		}
 
 
 		#region Private
-		private async Task<IEnumerable<(Flight[] outSegments, Flight[] retSegments)>> RetrieveFlightCombinationsAsync(List<Flight> outFlights, FlightQuery query, Parameters parameters)
+		private async Task<(Flight[], Flight[])[]> RetrieveRouteCombinationsAsync(Flight[][] outRoutes, FlightQuery query, Parameters parameters)
 		{
-			var tasks = outFlights.Select(async outFlight =>
+			var tasks = outRoutes.Select(async outRoute =>
 			{
-				var returnFlights = await RetrieveReturnFlightsAsync(outFlight, query, parameters);
-				return AssembleCombinations(outFlight, returnFlights);
+				var returnRoutes = await RetrieveReturnRoutesAsync(outRoute, query, parameters);
+				return AssembleCombinations(outRoute, returnRoutes);
 			});
 
-			return await RetrieveCombinationsConsecutivelyAsync(tasks, parameters);
+			return await FlattenCombinationsAsync(tasks, parameters);
 		}
 
-		private static async Task<IEnumerable<(Flight[], Flight[])>> RetrieveCombinationsConsecutivelyAsync(IEnumerable<Task<(Flight[], Flight[])[]>> tasks, Parameters parameters)
+		private static async Task<(Flight[], Flight[])[]> FlattenCombinationsAsync(IEnumerable<Task<(Flight[], Flight[])[]>> tasks, Parameters parameters)
 		{
 			//Entity Framework Core does not support multiple parallel operations being run on the same DbContext instance.
 			//https://learn.microsoft.com/en-us/ef/core/dbcontext-configuration/#avoiding-dbcontext-threading-issues
-			//So use consecutive way
 
 			List<(Flight[], Flight[])> combinations = [];
 
@@ -70,51 +65,48 @@ namespace FlightsAPI.Infrastructure.DataBases
 				if (combinations.Count >= parameters.MaxFlightOffers)
 					break;
 			}
-			return combinations;
+			return combinations.ToArray();
 		}
 
 		/// <summary>
-		/// Produce the Array of combinations related to the given outflight. Combination is a tuple of flight arrays, each array representing a set of one-way flight segments
+		/// Produce an array of combinations related to the given outbound route. A combination is a tuple of arrays of flights, each array representing a one-way route
 		/// </summary>
-		private static (Flight[] outSegments, Flight[] retSegments)[] AssembleCombinations(Flight outFlight, List<Flight> returnFlights) =>
-			returnFlights.Select<Flight, (Flight[], Flight[])>(retFlight => ([outFlight], [retFlight])).ToArray();
+		private static (Flight[], Flight[])[] AssembleCombinations(Flight[] outRoute, Flight[][] returnRoutes) =>
+			returnRoutes.Select(retRoute => (outRoute, retRoute)).ToArray();
 
 		/// <summary>
-		/// Retrieve return flights for the given outbound flight
+		/// Retrieve the outbound routes. Each route is an array of sequential flights (segments). Only 1 segment routes (with no connections) are now supported.
 		/// </summary>
-		private async Task<List<Flight>> RetrieveReturnFlightsAsync(Flight outFlight, FlightQuery query, Parameters parameters) =>
-			await DbContext.Flights
-				.Include(fl => fl.TicketFlights.Where(tf => tf.Amount <= parameters.MaxPriceRub))
-				.Where(CombineExpressions(
-					GetBasicReturnFilter(query, outFlight, parameters),
-					GetAirlinesFilter(query)))
-				.Take(Options.Value.MaxReturnFlights)
-				.ToListAsync();
-
-		private IEnumerable<FlightOffer> MapToFlightOffers(List<Flight> outFlights) =>
-			Mapper.Map<IEnumerable<FlightOffer>>(outFlights);
-		private IEnumerable<FlightOffer> MapToFlightOffers(IEnumerable<(Flight[] outSegments, Flight[] retSegments)> flightCombinations) =>
-			Mapper.Map<IEnumerable<FlightOffer>>(flightCombinations);
-
-		/// <summary>
-		/// Set Id to each flight offer in flight offer collection
-		/// </summary>
-		/// <param name="flightOffers"></param>
-		private void SetFlightOfferIds(IEnumerable<FlightOffer> flightOffers)
-		{
-			int i = 1;
-			foreach (var fl in flightOffers)
-				fl.Id = i++.ToString();
-		}
-
-		private async Task<List<Flight>> RetrieveOutboundFlightsAsync(FlightQuery query, Parameters parameters) =>
+		private async Task<Flight[][]> RetrieveOutboundRoutesAsync(FlightQuery query, Parameters parameters) =>
 			await DbContext.Flights
 				.Include(fl => fl.TicketFlights.Where(tf => tf.Amount <= parameters.MaxPriceRub))
 				.Where(CombineExpressions(
 					GetBasicOutFliter(query, parameters),
 					GetAirlinesFilter(query)))
 				.Take(parameters.MaxFlightOffers)
-				.ToListAsync();
+				.Select(fl => new Flight[] {fl})
+				.ToArrayAsync();
+
+		/// <summary>
+		/// Retrieve return routes for the given outbound route. Each route is an array of sequential flights (segments). Only 1 segment routes (with no connections) are now supported.
+		/// </summary>
+		private async Task<Flight[][]> RetrieveReturnRoutesAsync(Flight[] outRoute, FlightQuery query, Parameters parameters) =>
+			await DbContext.Flights
+				.Include(fl => fl.TicketFlights.Where(tf => tf.Amount <= parameters.MaxPriceRub))
+				.Where(CombineExpressions(
+					GetBasicReturnFilter(query, outRoute, parameters),
+					GetAirlinesFilter(query)))
+				.Take(Options.Value.MaxReturnFlights)
+				.Select(fl => new Flight[] {fl})
+				.ToArrayAsync();
+
+		private IEnumerable<FlightOffer> MapToFlightOffers(Flight[][] outRoutes) =>
+			Mapper.Map<IEnumerable<FlightOffer>>(outRoutes)
+			.SetFlightOfferIds();
+		private IEnumerable<FlightOffer> MapToFlightOffers((Flight[], Flight[])[] routeCombinations) =>
+			Mapper.Map<IEnumerable<FlightOffer>>(routeCombinations)
+			.SetFlightOfferIds();
+
 
 		private Expression<Func<Flight, bool>> GetBasicOutFliter(FlightQuery query, Parameters parameters) =>
 			fl =>
@@ -123,10 +115,9 @@ namespace FlightsAPI.Infrastructure.DataBases
 				fl.ScheduledDeparture.UtcDateTime.Date >= parameters.MinOutDate &&
 				fl.ScheduledDeparture.UtcDateTime.Date <= parameters.MaxOutDate &&
 				fl.TicketFlights.Any(); //skip flights with tickets unavailable;
-
-		private Expression<Func<Flight, bool>> GetBasicReturnFilter(FlightQuery query, Flight outFlight, Parameters parameters)
+		private Expression<Func<Flight, bool>> GetBasicReturnFilter(FlightQuery query, Flight[] outRoute, Parameters parameters)
 		{
-			var minReturnDepartTime = outFlight.ScheduledArrival.UtcDateTime.AddMinutes(Options.Value.MCT); //minimal acceptable time between two consequent flights
+			var minReturnDepartTime = outRoute[^1].ScheduledArrival.UtcDateTime.AddMinutes(Options.Value.MCT); //minimal acceptable time between two consequent flights
 			return fl =>
 				fl.DepartureAirport == query.DestinationLocationCode &&
 				fl.ArrivalAirport == query.OriginLocationCode &&
@@ -134,9 +125,7 @@ namespace FlightsAPI.Infrastructure.DataBases
 				fl.ScheduledDeparture.UtcDateTime >= minReturnDepartTime &&
 				fl.ScheduledDeparture.UtcDateTime.Date <= parameters.MaxReturnDate &&
 				fl.TicketFlights.Any(); //skip flights with tickets unavailable;
-
 		}
-
 		private Expression<Func<Flight, bool>> GetAirlinesFilter(FlightQuery query)
 		{
 			var sc = query.SearchCriteria;
@@ -169,6 +158,7 @@ namespace FlightsAPI.Infrastructure.DataBases
 
 			return Expression.Lambda<T>(combinedExpression, firstExpression.Parameters);
 		}
+		
 		private record Parameters
 		{
 			/// <summary>
