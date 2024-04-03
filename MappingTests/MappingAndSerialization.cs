@@ -2,11 +2,12 @@ using AutoMapper;
 using FlightsAPI.MapperProfiles;
 using FlightsAPI.Models;
 using FlightsAPI.Models.Amadeus;
+using System.Globalization;
 using System.Text.Json;
 
 namespace MappingAndSerialization
 {
-	public class MappingTests
+	public class MappingAndSerialization
 	{
 		private IMapper _mapper = new MapperConfiguration(cfg => cfg.AddProfile(new FlightQueryProfile())).CreateMapper();
 		private JsonSerializerOptions _jOptions = new()
@@ -21,11 +22,10 @@ namespace MappingAndSerialization
 		{
 			FlightQuery flightQuery = new()
 			{
-				CurrencyCode = "USD",
 				OriginLocationCode = "NYC",
 				DestinationLocationCode = "MAD",
-				DepartureDate = new DateRange { Date = "2024-04-15" },
-				ReturnDate = new DateRange { Date = "2024-04-16" }
+				DepartureDate = new DateRange { Date = DateTime.ParseExact("2024-04-15", "yyyy-MM-dd", CultureInfo.InvariantCulture)},
+				ReturnDate = new DateRange { Date = DateTime.ParseExact("2024-04-16", "yyyy-MM-dd", CultureInfo.InvariantCulture) }
 			};
 
 			var actual = _mapper.Map<AmadeusFlightQuery>(flightQuery);
@@ -65,16 +65,15 @@ namespace MappingAndSerialization
 		[Fact]
 		public void FlightQueryDeserialization()
 		{
-			string queryJson = "{\"currencyCode\":\"USD\",\"OriginLocationCode\":\"NYC\",\"DestinationLocationCode\":\"MAD\",\"DepartureDate\":{\"Date\":\"2024-04-15\"},\"ReturnDate\":{\"Date\":\"2024-04-16\"}}";
+			string queryJson = "{\"originLocationCode\":\"NYC\",\"destinationLocationCode\":\"MAD\",\"departureDate\":{\"date\":\"2024-04-15\"},\"returnDate\":{\"date\":\"2024-04-16\"}}";
 			var actual = JsonSerializer.Deserialize<FlightQuery>(queryJson, _jOptions);
 
 			var expected = new FlightQuery()
 			{
-				CurrencyCode = "USD",
 				OriginLocationCode = "NYC",
 				DestinationLocationCode = "MAD",
-				DepartureDate = new DateRange { Date = "2024-04-15" },
-				ReturnDate = new DateRange { Date = "2024-04-16" }
+				DepartureDate = new DateRange { Date = DateTime.ParseExact("2024-04-15", "yyyy-MM-dd", CultureInfo.InvariantCulture) },
+				ReturnDate = new DateRange { Date = DateTime.ParseExact("2024-04-16", "yyyy-MM-dd", CultureInfo.InvariantCulture) }
 			};
 
 			Assert.Equal(expected, actual);
