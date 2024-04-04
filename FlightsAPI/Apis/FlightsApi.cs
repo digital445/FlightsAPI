@@ -28,16 +28,6 @@ namespace FlightsAPI.Apis
 			return TypedResults.NoContent();
 		}
 
-		private static void ValidateQuery(FlightQuery query)
-		{
-			ArgumentNullException.ThrowIfNull(query);
-			ArgumentNullException.ThrowIfNull(query.DepartureDate);
-			if (query.ReturnDate != null &&
-				query.ReturnDate.Date < query.DepartureDate.Date)
-			{
-				throw new ArgumentException("The return flight should be after the outbound flight.");
-			}
-		}
 
 		private static async Task<Results<Ok<IEnumerable<FlightOffer>>, IResult>> BookFlights(
 			BookingOrder query, 
@@ -49,6 +39,16 @@ namespace FlightsAPI.Apis
 		}
 
 		
+		private static void ValidateQuery(FlightQuery query)
+		{
+			ArgumentNullException.ThrowIfNull(query);
+			ArgumentNullException.ThrowIfNull(query.DepartureDate);
+			if (query.ReturnDate != null &&
+				query.ReturnDate.Date < query.DepartureDate.Date)
+			{
+				throw new ArgumentException("The return flight should be after the outbound flight.");
+			}
+		}
 
 	}
 }
