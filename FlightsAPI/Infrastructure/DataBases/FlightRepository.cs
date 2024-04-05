@@ -5,23 +5,54 @@ using FlightsAPI.Models.FlightDb;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Linq.Expressions;
+using System.Text;
+using System.Text.Json;
+using static FlightsAPI.Enumerations;
 
 namespace FlightsAPI.Infrastructure.DataBases
 {
 	public class FlightRepository(
 		FlightDbContext DbContext,
-		IOptions<FlightDbOptions> Options,
+		IOptions<FlightDbOptions> IOptions,
+		IOptions<JsonSerializerOptions> JOptions,
 		IMapper Mapper) : IFlightRepository
 	{
-		public Task<BookingResult> BookFlights(BookingOrder query)
+		private readonly FlightDbOptions _options = IOptions.Value;
+		private readonly JsonSerializerOptions _jOptions = JOptions.Value;
+		public async Task<BookingResult> BookFlights(BookingOrder query)
 		{
-			throw new NotImplementedException();
-		}
+			try
+			{
+				TicketFlight[]? ticketFlights = CreateTicketFlights(query);
+				Ticket ticket = await CreateTicketAsync(query, ticketFlights);
+				Booking booking = CreateBooking(query, ticket);
 
+				await DbContext.Bookings.AddAsync(booking);
+				await DbContext.SaveChangesAsync();
+
+				return new BookingResult
+				{
+					Id = GenerateBookingId(booking),
+					AssociatedRecords = [new AssosiatedRecord {
+						CreationDate = booking.BookDate.ToString("yyyy-MM-ddTHH:mm:ss"),
+						FlightOfferId = query.FlightOffer?.Id,
+						Reference = booking.BookRef
+					}]
+				};
+			}
+			catch (DbUpdateException ex)
+			{
+				if (ex.InnerException is Npgsql.PostgresException npgEx)
+				{
+					return new BookingResult { Issues = [new OrderIssue { Title = "PostgreSQLException", Detail = npgEx.Message }] };
+				}
+				throw;
+			}
+		}
 
 		public async Task<IEnumerable<FlightOffer>> GetFlightOffers(FlightQuery query)
 		{
-			var parameters = new Parameters(query, Options.Value);
+			var parameters = new Parameters(query, _options);
 
 			Flight[][] outRoutes = await RetrieveOutboundRoutesAsync(query, parameters);
 
@@ -34,7 +65,54 @@ namespace FlightsAPI.Infrastructure.DataBases
 		}
 
 
-		#region Private
+	#region Private
+		#region BookFlights
+		private static TicketFlight[]? CreateTicketFlights(BookingOrder query) =>
+			query.FlightOffer?.TravelerPricings?.FirstOrDefault()?.FareDetailsBySegment?.Select(fd => new TicketFlight
+			{
+				FlightId = int.Parse(fd.SegmentId!),
+				Amount = fd.Price ?? -1,
+				FareConditions = fd.Cabin ?? ""
+			})
+			.ToArray();
+		private Booking CreateBooking(BookingOrder query, Ticket ticket) =>
+			new Booking
+			{
+				BookRef = Booking.GetRandomBookRef(),
+				BookDate = DateTime.UtcNow,
+				TotalAmount = (query.FlightOffer?.Price?.Total ?? 0) * _options.UsdToRubConversionRate,
+				Tickets = [ticket]
+			};
+		private static string GenerateBookingId(Booking booking)
+		{
+			string originalString = $"{booking.BookRef}|{FlightProvider.DemoDB}|{booking.BookDate:yyyy-MM-dd}";
+			byte[] bytes = Encoding.UTF8.GetBytes(originalString);
+
+			return Convert.ToBase64String(bytes);
+		}
+		private async Task<Ticket> CreateTicketAsync(BookingOrder query, TicketFlight[]? ticketFlights)
+		{
+			long lastTicketNo = long.Parse(await DbContext.Tickets.MaxAsync(t => t.TicketNo)); //TODO: consider automatic increment in db
+			var contactData = new
+			{
+				Email = query.Traveler?.Contact?.EmailAddress ?? "",
+				Phone = query.Traveler?.Contact?.Phone?.PhoneString ?? ""
+			};
+
+			var ticket = new Ticket
+			{
+				TicketNo = (++lastTicketNo).ToString("D13"),
+				PassengerName = query.Traveler?.Name?.FullName?.ToUpper() ?? "",
+				ContactData = JsonSerializer.Serialize(contactData, _jOptions),
+				PassengerId = query.Traveler?.PassengerId ?? "",
+				TicketFlights = ticketFlights!
+			};
+			return ticket;
+		}
+		#endregion
+
+
+		#region GetFlightOffers
 		private async Task<(Flight[], Flight[])[]> RetrieveRouteCombinationsAsync(Flight[][] outRoutes, FlightQuery query, Parameters parameters)
 		{
 			var tasks = outRoutes.Select(async outRoute =>
@@ -96,7 +174,7 @@ namespace FlightsAPI.Infrastructure.DataBases
 				.Where(CombineExpressions(
 					GetBasicReturnFilter(query, outRoute, parameters),
 					GetAirlinesFilter(query)))
-				.Take(Options.Value.MaxReturnFlights)
+				.Take(_options.MaxReturnFlights)
 				.Select(fl => new Flight[] {fl})
 				.ToArrayAsync();
 
@@ -117,7 +195,7 @@ namespace FlightsAPI.Infrastructure.DataBases
 				fl.TicketFlights.Any(); //skip flights with tickets unavailable;
 		private Expression<Func<Flight, bool>> GetBasicReturnFilter(FlightQuery query, Flight[] outRoute, Parameters parameters)
 		{
-			var minReturnDepartTime = outRoute[^1].ScheduledArrival.UtcDateTime.AddMinutes(Options.Value.MCT); //minimal acceptable time between two consequent flights
+			var minReturnDepartTime = outRoute[^1].ScheduledArrival.UtcDateTime.AddMinutes(_options.MCT); //minimal acceptable time between two consequent flights
 			return fl =>
 				fl.DepartureAirport == query.DestinationLocationCode &&
 				fl.ArrivalAirport == query.OriginLocationCode &&
@@ -197,7 +275,7 @@ namespace FlightsAPI.Infrastructure.DataBases
 				MaxReturnDate = query.ReturnDate?.MaxDate ?? DateTime.MaxValue;
 			}
 		}
-
 		#endregion
+	#endregion
 	}
 }
