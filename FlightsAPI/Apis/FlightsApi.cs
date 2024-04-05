@@ -29,13 +29,19 @@ namespace FlightsAPI.Apis
 		}
 
 
-		private static async Task<Results<Ok<IEnumerable<FlightOffer>>, IResult>> BookFlights(
+		private static async Task<Results<Ok<BookingResult>, IResult>> BookFlights(
 			BookingOrder query, 
 			IFlightService flightService)
 		{
 
-			var bookingOrder = await flightService.BookFlights(query);
-			return TypedResults.Ok(bookingOrder);
+			var bookingResult = await flightService.BookFlights(query);
+
+			Results<Ok<BookingResult>, IResult> result = bookingResult.Issues switch
+			{
+				null => TypedResults.Ok(bookingResult),
+				_ => TypedResults.BadRequest(bookingResult.Issues)
+			};
+			return result;
 		}
 
 		
