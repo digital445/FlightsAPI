@@ -72,7 +72,7 @@ namespace FlightsAPI.MapperProfiles
 
 			itineraries[0] = new Itinerary
 			{
-				Segments = CreateSegments(outSegments, 1),
+				Segments = CreateSegments(outSegments),
 				Duration = CalculateItineraryDuration(outSegments)
 			};
 
@@ -81,7 +81,7 @@ namespace FlightsAPI.MapperProfiles
 
 			itineraries[1] = new Itinerary
 			{
-				Segments = CreateSegments(retSegments, outSegments.Length + 1),
+				Segments = CreateSegments(retSegments),
 				Duration = CalculateItineraryDuration(retSegments)
 			};
 			return itineraries;
@@ -89,23 +89,24 @@ namespace FlightsAPI.MapperProfiles
 
 		private static FareDetailsBySegment[] ExtractFareDetails(Flight[] outSegments, Flight[]? retSegments)
 		{
-			var fareDetails = GetOneWayFareDetails(outSegments, 1);
+			var fareDetails = GetOneWayFareDetails(outSegments);
 			if (retSegments != null)
 			{
-				fareDetails = fareDetails.Concat(GetOneWayFareDetails(retSegments, outSegments.Length + 1));
+				fareDetails = fareDetails.Concat(GetOneWayFareDetails(retSegments));
 			}
 			return fareDetails.ToArray();
 		}
 
-		private static IEnumerable<FareDetailsBySegment> GetOneWayFareDetails(Flight[] segments, int startSegmentId) =>
-			segments.Select((fl, i) => new FareDetailsBySegment
+		private static IEnumerable<FareDetailsBySegment> GetOneWayFareDetails(Flight[] segments) =>
+			segments.Select(fl => new FareDetailsBySegment
 			{
-				SegmentId = (startSegmentId + i).ToString(),
+				SegmentId = fl.FlightId.ToString(),
+				Price = fl.TicketFlights.FirstOrDefault()?.Amount,
 				Cabin = GetFareConditions(fl)
 			});
 
 		private static string? GetFareConditions(Flight fl) =>
-			fl.TicketFlights.FirstOrDefault()?.FareConditions.ToUpper();
+			fl.TicketFlights.FirstOrDefault()?.FareConditions;
 
 		private decimal? GetTotalPrice(Flight[] outSegments, Flight[]? retSegments) =>
 			GetOneWayTotalPrice(outSegments) 
@@ -115,11 +116,11 @@ namespace FlightsAPI.MapperProfiles
 			segments.Aggregate(0m, (acc, fl) => acc + fl.TicketFlights.FirstOrDefault()?.Amount ?? 0)
 				/ _flightDbOptions.UsdToRubConversionRate;
 
-		private static Segment[] CreateSegments(Flight[] segments, int startSegmentId) =>
-			segments.Select((fl, i) =>
+		private static Segment[] CreateSegments(Flight[] segments) =>
+			segments.Select(fl =>
 				new Segment
 				{
-					Id = (startSegmentId + i).ToString(),
+					Id = fl.FlightId.ToString(),
 					Departure = new Airport
 					{
 						IataCode = fl.DepartureAirport,
