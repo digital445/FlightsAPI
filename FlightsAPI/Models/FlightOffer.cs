@@ -62,6 +62,7 @@ namespace FlightsAPI.Models
 	public record FareDetailsBySegment
 	{
 		public string? SegmentId { get; init; }
+		public decimal? Price { get; init; }
 		public string? Class { get; init; }
 		public string? Cabin { get; init; }
 	}
