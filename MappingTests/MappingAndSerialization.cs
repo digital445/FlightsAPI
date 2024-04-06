@@ -9,8 +9,8 @@ namespace MappingAndSerialization
 {
 	public class MappingAndSerialization
 	{
-		private IMapper _mapper = new MapperConfiguration(cfg => cfg.AddProfile(new FlightQueryProfile())).CreateMapper();
-		private JsonSerializerOptions _jOptions = new()
+		private readonly IMapper _mapper = new MapperConfiguration(cfg => cfg.AddProfile(new FlightQueryProfile())).CreateMapper();
+		private readonly JsonSerializerOptions _jOptions = new()
 		{
 			DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
 			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -24,8 +24,8 @@ namespace MappingAndSerialization
 			{
 				OriginLocationCode = "NYC",
 				DestinationLocationCode = "MAD",
-				DepartureDate = new DateRange { Date = DateTime.ParseExact("2024-04-15", "yyyy-MM-dd", CultureInfo.InvariantCulture)},
-				ReturnDate = new DateRange { Date = DateTime.ParseExact("2024-04-16", "yyyy-MM-dd", CultureInfo.InvariantCulture) }
+				DepartureDate = new DateRange { Date = new DateTime(2024, 4, 15) },
+					ReturnDate = new DateRange { Date = new DateTime(2024, 4, 16) }
 			};
 
 			var actual = _mapper.Map<AmadeusFlightQuery>(flightQuery);
