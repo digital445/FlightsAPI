@@ -10,6 +10,7 @@ using FlightsAPI.Infrastructure.DataBases.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using FlightsAPI.MapperProfiles;
 using Microsoft.Extensions.Options;
+using FlightsAPI.Caching;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,10 @@ string? dbConnectionString = builder.Configuration["FlightDb:ConnectionString"];
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddOutputCache(options => 
+	options.AddPolicy("CachePost", CustomCachingPolicy.Instance)
+);
 //Add AutoMapper profiles manually because of using DI in one profile
 builder.Services.AddAutoMapper((provider, cfg) =>
 {
@@ -61,5 +66,6 @@ app.MapGroup("/api/v1/flights")
 	.WithTags("Flights API")
 	.MapFlightsApi();
 
+app.UseOutputCache();
 
 app.Run();

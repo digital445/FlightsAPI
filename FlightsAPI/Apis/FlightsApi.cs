@@ -8,7 +8,7 @@ namespace FlightsAPI.Apis
 	{
 		public static IEndpointRouteBuilder MapFlightsApi(this IEndpointRouteBuilder app)
 		{
-			app.MapPost("/search", GetFlightOffers);
+			app.MapPost("/search", GetFlightOffers).CacheOutput("CachePost");
 			app.MapPost("/book", BookFlights);
 
 			return app;
