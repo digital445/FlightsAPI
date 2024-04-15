@@ -17,7 +17,7 @@ Demo Flight PostgreSQL database https://edu.postgrespro.com/demo-small-en.zip
 ## Plans
 * Write Swagger API documentation  
 * Add more tests including functional  
-* Implement request caching  
+* ~~Implement request caching~~  
 * Add authentication and authorization  
 * Create simple web app 
 * Containerization of API, application and database with Docker  
