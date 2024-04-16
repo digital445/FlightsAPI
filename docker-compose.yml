@@ -1,0 +1,19 @@
+version: '3.4'
+
+services:
+  flightsapi:
+    image:
+      flightsapi:latest
+    build:
+      context: .
+      dockerfile: FlightsAPI/Dockerfile
+    networks:
+      - api-network
+  
+  postgres:
+    image:  flight_db:latest
+    networks:
+      - api-network
+networks:
+  api-network:
+    driver: bridge
