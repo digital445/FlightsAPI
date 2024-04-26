@@ -17,17 +17,18 @@ namespace FlightsAPI.Infrastructure.DataBases
 		IOptions<JsonSerializerOptions> JOptions,
 		IMapper Mapper) : IFlightRepository
 	{
+		private const string DEFAULT_TICKET_NO = "IS_SET_IN_DB"; //Don't change. Same value is hardcoded in database.
 		private readonly FlightDbOptions _options = IOptions.Value;
 		private readonly JsonSerializerOptions _jOptions = JOptions.Value;
 		public async Task<BookingResult> BookFlights(BookingOrder query)
 		{
 			try
 			{
-				TicketFlight[]? ticketFlights = CreateTicketFlights(query);
-				Ticket ticket = await CreateTicketAsync(query, ticketFlights);
+				TicketFlight[] ticketFlights = CreateTicketFlights(query);
+				Ticket ticket = CreateTicket(query, ticketFlights);
 				Booking booking = CreateBooking(query, ticket);
 
-				await DbContext.Bookings.AddAsync(booking);
+				DbContext.Bookings.Add(booking);
 				await DbContext.SaveChangesAsync();
 
 				return new BookingResult
@@ -65,16 +66,19 @@ namespace FlightsAPI.Infrastructure.DataBases
 		}
 
 
-	#region Private
+		#region Private
 		#region BookFlights
-		private static TicketFlight[]? CreateTicketFlights(BookingOrder query) =>
-			query.FlightOffer?.TravelerPricings?.FirstOrDefault()?.FareDetailsBySegment?.Select(fd => new TicketFlight
-			{
-				FlightId = int.Parse(fd.SegmentId!),
-				Amount = fd.Price ?? -1,
-				FareConditions = fd.Cabin ?? ""
-			})
-			.ToArray();
+		private static TicketFlight[] CreateTicketFlights(BookingOrder query) =>
+			query.FlightOffer?.TravelerPricings?.FirstOrDefault()?.FareDetailsBySegment?
+				.Select(fd => new TicketFlight
+				{
+					FlightId = int.TryParse(fd.SegmentId, out int id) ? id : 0,
+					Amount = fd.Price ?? -1,
+					FareConditions = fd.Cabin ?? "",
+					TicketNo = DEFAULT_TICKET_NO
+				})
+				.ToArray() ?? [];
+			
 		private Booking CreateBooking(BookingOrder query, Ticket ticket) =>
 			new Booking
 			{
@@ -90,9 +94,8 @@ namespace FlightsAPI.Infrastructure.DataBases
 
 			return Convert.ToBase64String(bytes);
 		}
-		private async Task<Ticket> CreateTicketAsync(BookingOrder query, TicketFlight[]? ticketFlights)
+		private Ticket CreateTicket(BookingOrder query, TicketFlight[] ticketFlights)
 		{
-			long lastTicketNo = long.Parse(await DbContext.Tickets.MaxAsync(t => t.TicketNo)); //TODO: consider automatic increment in db
 			var contactData = new
 			{
 				Email = query.Traveler?.Contact?.EmailAddress ?? "",
@@ -101,12 +104,13 @@ namespace FlightsAPI.Infrastructure.DataBases
 
 			var ticket = new Ticket
 			{
-				TicketNo = (++lastTicketNo).ToString("D13"),
+				TicketNo = DEFAULT_TICKET_NO,
 				PassengerName = query.Traveler?.Name?.FullName?.ToUpper() ?? "",
 				ContactData = JsonSerializer.Serialize(contactData, _jOptions),
 				PassengerId = query.Traveler?.PassengerId ?? "",
-				TicketFlights = ticketFlights!
+				TicketFlights = ticketFlights
 			};
+
 			return ticket;
 		}
 		#endregion
@@ -162,7 +166,7 @@ namespace FlightsAPI.Infrastructure.DataBases
 					GetBasicOutFliter(query, parameters),
 					GetAirlinesFilter(query)))
 				.Take(parameters.MaxFlightOffers)
-				.Select(fl => new Flight[] {fl})
+				.Select(fl => new Flight[] { fl })
 				.ToArrayAsync();
 
 		/// <summary>
@@ -175,7 +179,7 @@ namespace FlightsAPI.Infrastructure.DataBases
 					GetBasicReturnFilter(query, outRoute, parameters),
 					GetAirlinesFilter(query)))
 				.Take(_options.MaxReturnFlights)
-				.Select(fl => new Flight[] {fl})
+				.Select(fl => new Flight[] { fl })
 				.ToArrayAsync();
 
 		private IEnumerable<FlightOffer> MapToFlightOffers(Flight[][] outRoutes) =>
@@ -236,7 +240,7 @@ namespace FlightsAPI.Infrastructure.DataBases
 
 			return Expression.Lambda<T>(combinedExpression, firstExpression.Parameters);
 		}
-		
+
 		private record Parameters
 		{
 			/// <summary>
@@ -276,6 +280,6 @@ namespace FlightsAPI.Infrastructure.DataBases
 			}
 		}
 		#endregion
-	#endregion
+		#endregion
 	}
 }
